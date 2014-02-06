@@ -74,11 +74,11 @@
 	                <li class="subject-data">
 	                    <div class="lbl" translate>Subject</div>
 	                    <div class="data">
-	                    	<div sd-typeahead items="typeitems" term="searchTerm" search="searchSubjects(term)" select="selectSubject(item)"
+	                    	<div sd-typeahead items="subjects" term="subjectTerm" search="searchSubjects(term)" select="selectSubject(item)"
 	                    	>
 	                    		<ul>
-		                            <li typeahead-item="t" ng-repeat="t in typeitems" class="results">
-		                               {{t.term}} <i>({{t.count}})</i>
+		                            <li typeahead-item="s" ng-repeat="s in subjects" class="results">
+		                               {{s.term}} <i>({{s.count}})</i>
 		                            </li>
 		                        </ul>
 	                    	</div>

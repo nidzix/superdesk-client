@@ -686,34 +686,34 @@ define([
                     });
 
                     //implementing typeahed directive and subject filtering
-                    var typeitemsSource = [];
+                    var subjectsSource = [];
                     $scope.$watchCollection('items', function() {
                         if ($scope.items._facets !== undefined) {
-                            typeitemsSource = $scope.items._facets.subject.terms;
+                            subjectsSource = $scope.items._facets.subject.terms;
                         }
                     });
 
-                    $scope.typeitems = [];
-                    $scope.searchTerm = '';
+                    $scope.subjects = [];
+                    $scope.subjectTerm = '';
 
                     $scope.searchSubjects = function(term) {
                         if (!term) {
-                            $scope.typeitems = [];
+                            $scope.subjects = [];
                         } else {
 
-                            $scope.typeitems = typeitemsSource.filter(function(t) {
+                            $scope.subjects = subjectsSource.filter(function(t) {
                                 return ((t.term.toLowerCase().indexOf(term.toLowerCase()) !== -1) &&
                                     !_.contains($scope.search.subjects, t.term.toLowerCase()));
                             });
                         }
 
-                        return $scope.typeitems;
+                        return $scope.subjects;
                     };
 
                     $scope.selectSubject = function(item) {
                         if (item) {
                             $scope.search.subjects.push(item.term);
-                            $scope.searchTerm = '';
+                            $scope.subjectTerm = '';
                         }
                     };
 
