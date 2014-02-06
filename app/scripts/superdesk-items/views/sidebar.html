@@ -71,19 +71,24 @@
 	                    	<div class="dropdown source-select" sd-provider-menu data-items="items" data-selected="search.general.provider"></div>
 	                    </div>
 	                </li>
-	                <li>
+	                <li class="subject-data">
 	                    <div class="lbl" translate>Subject</div>
-	                    <div class="data data-provider">
-	                    	<div sd-typeahead items="typeitems" 
-	                    	term="search.subject" search="searchSubjects(term)" select="selectSubjects(item)"
+	                    <div class="data">
+	                    	<div sd-typeahead items="typeitems" term="searchTerm" search="searchSubjects(term)" select="selectSubject(item)"
 	                    	>
 	                    		<ul>
-		                            <li typeahead-item="t" ng-repeat="t in items._facets.subject.terms" class="results">
-		                               {{t.term}}
+		                            <li typeahead-item="t" ng-repeat="t in typeitems" class="results">
+		                               {{t.term}} <i>({{t.count}})</i>
 		                            </li>
 		                        </ul>
 	                    	</div>
+	                    	
 	                    </div>
+	                    <div class="subject-container">
+                    		<ul>
+                    			<li ng-repeat="s in search.subjects">{{s}}</li>
+                    		</ul>
+                    	</div>
 	                </li>
 	                <li>
 	                    <div class="lbl" translate>Creditline</div>

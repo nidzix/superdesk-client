@@ -563,7 +563,7 @@ define([
 
                     $scope.search = {
                         type: {
-                            text: true,
+                            text: false,
                             audio: false,
                             video: false,
                             picture: false,
@@ -583,7 +583,7 @@ define([
                                 to: null
                             }
                         },
-                        subject : null
+                        subjects: []
                     };
 
                     //helper variables to handle large number of changes
@@ -639,8 +639,18 @@ define([
                             }
                         });
 
+                        //process subject filters
+                        if ($scope.search.subjects.length > 0) {
+                            filters.push({terms: {'subject.name': $scope.search.subjects, execution: 'and'}});
+                        }
+
                         //do filtering
-                        $location.search('filter', angular.toJson({and: filters}));
+                        if (filters.length > 0) {
+                            $location.search('filter', angular.toJson({and: filters}));
+                        } else {
+                            $location.search('filter', null);
+                        }
+
                     };
 
                     var createFiltersWrap = _.throttle(createFilters, 1000);
@@ -675,182 +685,187 @@ define([
                         handleUrgencyWrap(newVal);
                     });
 
-                    $scope.typeitems = [];
-                    $scope.$watchCollection('items',function(){
+                    //implementing typeahed directive and subject filtering
+                    var typeitemsSource = [];
+                    $scope.$watchCollection('items', function() {
                         if ($scope.items._facets !== undefined) {
-                            $scope.typeitems = _.map($scope.items._facets.subject.terms,function(i) {return i.term ;});
+                            typeitemsSource = $scope.items._facets.subject.terms;
                         }
                     });
 
-                    $scope.searchSubjects = function(term) {
-                        console.log('term search');
-                        console.log(term);
-                        
+                    $scope.typeitems = [];
+                    $scope.searchTerm = '';
 
-                        return [];
+                    $scope.searchSubjects = function(term) {
+                        if (!term) {
+                            $scope.typeitems = [];
+                        } else {
+
+                            $scope.typeitems = typeitemsSource.filter(function(t) {
+                                return ((t.term.toLowerCase().indexOf(term.toLowerCase()) !== -1) &&
+                                    !_.contains($scope.search.subjects, t.term.toLowerCase()));
+                            });
+                        }
+
+                        return $scope.typeitems;
                     };
-                    $scope.selectSubject = function(term) {
-                        console.log('term selected!');
-                        return term;
+
+                    $scope.selectSubject = function(item) {
+                        if (item) {
+                            $scope.search.subjects.push(item.term);
+                            $scope.searchTerm = '';
+                        }
                     };
 
                 }
             };
         }])
-.directive('sdTypeahead', ['$timeout', function($timeout) {
-    return {
-        restrict: 'A',
-        transclude: true,
-        replace: true,
-        template: '<div><form><input ng-model="term" ng-change="query()" type="text" autocomplete="off" /></form><div ng-transclude></div></div>',
-        scope: {
-            search: "&",
-            select: "&",
-            items: "=",
-            term: "="
-        },
-        controller: ["$scope", function($scope) {
-            $scope.items = [];
-            $scope.hide = false;
+        .directive('sdTypeahead', ['$timeout', function($timeout) {
+            return {
+                restrict: 'A',
+                transclude: true,
+                replace: true,
+                templateUrl: 'scripts/superdesk-items/views/typeahead.html',
+                scope: {
+                    search: '&',
+                    select: '&',
+                    items: '=',
+                    term: '='
+                },
+                controller: ['$scope', function($scope) {
+                    $scope.items = [];
+                    $scope.hide = false;
 
-            this.activate = function(item) {
-                $scope.active = item;
-            };
+                    this.activate = function(item) {
+                        $scope.active = item;
+                    };
 
-            this.activateNextItem = function() {
-                var index = $scope.items.indexOf($scope.active);
-                this.activate($scope.items[(index + 1) % $scope.items.length]);
-            };
+                    this.activateNextItem = function() {
+                        var index = $scope.items.indexOf($scope.active);
+                        this.activate($scope.items[(index + 1) % $scope.items.length]);
+                    };
 
-            this.activatePreviousItem = function() {
-                var index = $scope.items.indexOf($scope.active);
-                this.activate($scope.items[index === 0 ? $scope.items.length - 1 : index - 1]);
-            };
+                    this.activatePreviousItem = function() {
+                        var index = $scope.items.indexOf($scope.active);
+                        this.activate($scope.items[index === 0 ? $scope.items.length - 1 : index - 1]);
+                    };
 
-            this.isActive = function(item) {
-                return $scope.active === item;
-            };
+                    this.isActive = function(item) {
+                        return $scope.active === item;
+                    };
 
-            this.selectActive = function() {
-                this.select($scope.active);
-            };
+                    this.selectActive = function() {
+                        this.select($scope.active);
+                    };
 
-            this.select = function(item) {
-                $scope.hide = true;
-                $scope.focused = true;
-                $scope.select({item:item});
-            };
+                    this.select = function(item) {
+                        $scope.hide = true;
+                        $scope.focused = true;
+                        $scope.select({item: item});
+                    };
 
-            $scope.isVisible = function() {
-                return !$scope.hide && ($scope.focused || $scope.mousedOver);
-            };
+                    $scope.isVisible = function() {
+                        return !$scope.hide && ($scope.focused || $scope.mousedOver) && ($scope.items.length > 0);
+                    };
 
-            $scope.query = function() {
-                $scope.hide = false;
-                $scope.search({term:$scope.term});
-            }
-        }],
+                    $scope.query = function() {
+                        $scope.hide = false;
+                        $scope.search({term: $scope.term});
+                    };
+                }],
 
-        link: function(scope, element, attrs, controller) {
+                link: function(scope, element, attrs, controller) {
 
-            var $input = element.find('form > input');
-            var $list = element.find('> div');
+                    var $input = element.find('.input-term > input');
+                    var $list = element.find('.item-list');
 
-            $input.bind('focus', function() {
-                scope.$apply(function() { scope.focused = true; });
-            });
-
-            $input.bind('blur', function() {
-                scope.$apply(function() { scope.focused = false; });
-            });
-
-            $list.bind('mouseover', function() {
-                scope.$apply(function() { scope.mousedOver = true; });
-            });
-
-            $list.bind('mouseleave', function() {
-                scope.$apply(function() { scope.mousedOver = false; });
-            });
-
-            $input.bind('keyup', function(e) {
-                if (e.keyCode === 9 || e.keyCode === 13) {
-                    scope.$apply(function() { controller.selectActive(); });
-                }
-
-                if (e.keyCode === 27) {
-                    scope.$apply(function() { scope.hide = true; });
-                }
-            });
-
-            $input.bind('keydown', function(e) {
-                if (e.keyCode === 9 || e.keyCode === 13 || e.keyCode === 27) {
-                    e.preventDefault();
-                };
-
-                if (e.keyCode === 40) {
-                    e.preventDefault();
-                    scope.$apply(function() { controller.activateNextItem(); });
-                }
-
-                if (e.keyCode === 38) {
-                    e.preventDefault();
-                    scope.$apply(function() { controller.activatePreviousItem(); });
-                }
-            });
-
-            scope.$watch('items', function(items) {
-                controller.activate(items.length ? items[0] : null);
-            });
-
-            scope.$watch('focused', function(focused) {
-                if (focused) {
-                    $timeout(function() { $input.focus(); }, 0, false);
-                }
-            });
-
-            scope.$watch('isVisible()', function(visible) {
-                if (visible) {
-                    var pos = $input.position();
-                    var height = $input[0].offsetHeight;
-
-                    $list.css({
-                        top: pos.top + height,
-                        left: pos.left,
-                        position: 'absolute',
-                        display: 'block'
+                    $input.bind('focus', function() {
+                        scope.$apply(function() { scope.focused = true; });
                     });
-                } else {
-                    $list.css('display', 'none');
+
+                    $input.bind('blur', function() {
+                        scope.$apply(function() { scope.focused = false; });
+                    });
+
+                    $list.bind('mouseover', function() {
+                        scope.$apply(function() { scope.mousedOver = true; });
+                    });
+
+                    $list.bind('mouseleave', function() {
+                        scope.$apply(function() { scope.mousedOver = false; });
+                    });
+
+                    $input.bind('keyup', function(e) {
+                        if (e.keyCode === 9 || e.keyCode === 13) {
+                            scope.$apply(function() { controller.selectActive(); });
+                        }
+
+                        if (e.keyCode === 27) {
+                            scope.$apply(function() { scope.hide = true; });
+                        }
+                    });
+
+                    $input.bind('keydown', function(e) {
+                        if (e.keyCode === 9 || e.keyCode === 13 || e.keyCode === 27) {
+                            e.preventDefault();
+                        }
+
+                        if (e.keyCode === 40) {
+                            e.preventDefault();
+                            scope.$apply(function() { controller.activateNextItem(); });
+                        }
+
+                        if (e.keyCode === 38) {
+                            e.preventDefault();
+                            scope.$apply(function() { controller.activatePreviousItem(); });
+                        }
+                    });
+
+                    scope.$watch('items', function(items) {
+                        controller.activate(items.length ? items[0] : null);
+                    });
+
+                    scope.$watch('focused', function(focused) {
+                        if (focused) {
+                            $timeout(function() { $input.focus(); }, 0, false);
+                        }
+                    });
+
+                    scope.$watch('isVisible()', function(visible) {
+                        if (visible) {
+                            $list.show();
+                        } else {
+                            $list.hide();
+                        }
+                    });
                 }
-            });
-        }
-    };
-}])
-.directive('typeaheadItem', function() {
-    return {
-        require: '^typeahead',
-        link: function(scope, element, attrs, controller) {
+            };
+        }])
+        .directive('typeaheadItem', function() {
+            return {
+                require: '^sdTypeahead',
+                link: function(scope, element, attrs, controller) {
 
-            var item = scope.$eval(attrs.typeaheadItem);
+                    var item = scope.$eval(attrs.typeaheadItem);
 
-            scope.$watch(function() { return controller.isActive(item); }, function(active) {
-                if (active) {
-                    element.addClass('active');
-                } else {
-                    element.removeClass('active');
+                    scope.$watch(function() { return controller.isActive(item); }, function(active) {
+                        if (active) {
+                            element.addClass('active');
+                        } else {
+                            element.removeClass('active');
+                        }
+                    });
+
+                    element.bind('mouseenter', function(e) {
+                        scope.$apply(function() { controller.activate(item); });
+                    });
+
+                    element.bind('click', function(e) {
+                        scope.$apply(function() { controller.select(item); });
+                    });
                 }
-            });
-
-            element.bind('mouseenter', function(e) {
-                scope.$apply(function() { controller.activate(item); });
-            });
-
-            element.bind('click', function(e) {
-                scope.$apply(function() { controller.select(item); });
-            });
-        }
-    };
-})
+            };
+        })
 		.directive('sdWorkflow', ['superdesk', 'workqueue', function(superdesk, queue) {
             return {
                 scope: true,
