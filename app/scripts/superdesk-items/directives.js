@@ -562,14 +562,38 @@ define([
                     $scope.sidebarstick = true;
 
                     $scope.search = {
-                        type: {
-                            text: false,
-                            audio: false,
-                            video: false,
-                            picture: false,
-                            graphic: false,
-                            composite: false
-                        },
+                        type: [
+                            {
+                                term: 'text',
+                                checked: false,
+                                count: 0
+                            },
+                            {
+                                term: 'audio',
+                                checked: false,
+                                count: 0
+                            },
+                            {
+                                term: 'video',
+                                checked: false,
+                                count: 0
+                            },
+                            {
+                                term: 'picture',
+                                checked: false,
+                                count: 0
+                            },
+                            {
+                                term: 'graphic',
+                                checked: false,
+                                count: 0
+                            },
+                            {
+                                term: 'composite',
+                                checked: false,
+                                count: 0
+                            }
+                        ],
                         general: {
                             provider: null,
                             creditline: null,
@@ -583,7 +607,8 @@ define([
                                 to: null
                             }
                         },
-                        subjects: []
+                        subjects: [],
+                        places: []
                     };
 
                     //helper variables to handle large number of changes
@@ -618,12 +643,7 @@ define([
                         }
 
                         //process content type
-                        var contenttype = [];
-                        _.forEach($scope.search.type, function(checked, key) {
-                            if (checked) {
-                                contenttype.push(key);
-                            }
-                        });
+                        var contenttype = _.map(_.where($scope.search.type, {'checked': true}), function(t) { return t.term; });
 
                         //add content type filters as OR filters
                         if (contenttype.length > 0) {
@@ -642,6 +662,11 @@ define([
                         //process subject filters
                         if ($scope.search.subjects.length > 0) {
                             filters.push({terms: {'subject.name': $scope.search.subjects, execution: 'and'}});
+                        }
+
+                        //process place filters
+                        if ($scope.search.places.length > 0) {
+                            filters.push({terms: {'place.name': $scope.search.places, execution: 'and'}});
                         }
 
                         //do filtering
@@ -685,11 +710,17 @@ define([
                         handleUrgencyWrap(newVal);
                     });
 
-                    //implementing typeahed directive and subject filtering
+                    //implementing typeahed directive, subject and place filtering
                     var subjectsSource = [];
+                    var placesSource = [];
+
                     $scope.$watchCollection('items', function() {
                         if ($scope.items._facets !== undefined) {
                             subjectsSource = $scope.items._facets.subject.terms;
+                            placesSource = $scope.items._facets.place.terms;
+                            _.forEach($scope.items._facets.type.terms, function(type) {
+                                _.extend(_.first(_.where($scope.search.type, {term: type.term})), type);
+                            });
                         }
                     });
 
@@ -714,6 +745,30 @@ define([
                         if (item) {
                             $scope.search.subjects.push(item.term);
                             $scope.subjectTerm = '';
+                        }
+                    };
+
+                    $scope.places = [];
+                    $scope.placeTerm = '';
+
+                    $scope.searchPlace = function(term) {
+                        if (!term) {
+                            $scope.places = [];
+                        } else {
+
+                            $scope.places = placesSource.filter(function(p) {
+                                return ((p.term.toLowerCase().indexOf(term.toLowerCase()) !== -1) &&
+                                    !_.contains($scope.search.places, p.term.toLowerCase()));
+                            });
+                        }
+
+                        return $scope.subjects;
+                    };
+
+                    $scope.selectPlace = function(item) {
+                        if (item) {
+                            $scope.search.places.push(item.term);
+                            $scope.placeTerm = '';
                         }
                     };
 
@@ -796,7 +851,7 @@ define([
                     });
 
                     $input.bind('keyup', function(e) {
-                        if (e.keyCode === 9 || e.keyCode === 13) {
+                        if (e.keyCode === 13) {
                             scope.$apply(function() { controller.selectActive(); });
                         }
 
@@ -806,7 +861,7 @@ define([
                     });
 
                     $input.bind('keydown', function(e) {
-                        if (e.keyCode === 9 || e.keyCode === 13 || e.keyCode === 27) {
+                        if (e.keyCode === 13 || e.keyCode === 27) {
                             e.preventDefault();
                         }
 
