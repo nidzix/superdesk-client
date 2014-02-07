@@ -3,7 +3,7 @@
     <div class="header" ng-class="{'opened': !status, 'closed': status}">
         <div class="title">SCRATCHPAD</div>
         <div class="info"><span class="badge">{{items.length}}</span> <span translate>items</span></div>
-        <a class="scratchpad-openclose pull-right" href="" ng-click="status = !status"></a>   
+        <a class="scratchpad-openclose pull-right" href="" ng-click="toggle()"></a>   
     </div>
     <div class="content" style="height: 260px;" ng-show="status">
 
