@@ -710,72 +710,77 @@ define([
                         handleUrgencyWrap(newVal);
                     });
 
-                    //implementing typeahed directive, subject and place filtering
-                    var subjectsSource = [];
-                    var placesSource = [];
 
                     $scope.$watchCollection('items', function() {
                         if ($scope.items._facets !== undefined) {
-                            subjectsSource = $scope.items._facets.subject.terms;
-                            placesSource = $scope.items._facets.place.terms;
                             _.forEach($scope.items._facets.type.terms, function(type) {
                                 _.extend(_.first(_.where($scope.search.type, {term: type.term})), type);
                             });
                         }
                     });
 
-                    $scope.subjects = [];
-                    $scope.subjectTerm = '';
-
-                    $scope.searchSubjects = function(term) {
-                        if (!term) {
-                            $scope.subjects = [];
-                        } else {
-
-                            $scope.subjects = subjectsSource.filter(function(t) {
-                                return ((t.term.toLowerCase().indexOf(term.toLowerCase()) !== -1) &&
-                                    !_.contains($scope.search.subjects, t.term.toLowerCase()));
-                            });
-                        }
-
-                        return $scope.subjects;
-                    };
-
-                    $scope.selectSubject = function(item) {
-                        if (item) {
+                    $scope.addSubject = function(item) {
+                        if (!_.contains($scope.search.subjects, item.term.toLowerCase())) {
                             $scope.search.subjects.push(item.term);
-                            $scope.subjectTerm = '';
                         }
                     };
 
-                    $scope.places = [];
-                    $scope.placeTerm = '';
-
-                    $scope.searchPlace = function(term) {
-                        if (!term) {
-                            $scope.places = [];
-                        } else {
-
-                            $scope.places = placesSource.filter(function(p) {
-                                return ((p.term.toLowerCase().indexOf(term.toLowerCase()) !== -1) &&
-                                    !_.contains($scope.search.places, p.term.toLowerCase()));
-                            });
-                        }
-
-                        return $scope.subjects;
+                    $scope.removeSubject = function(item) {
+                        $scope.search.subjects = _.without($scope.search.subjects,item);
                     };
 
-                    $scope.selectPlace = function(item) {
-                        if (item) {
+                    $scope.addPlace = function(item) {
+                        if (!_.contains($scope.search.places, item.term.toLowerCase())) {
                             $scope.search.places.push(item.term);
-                            $scope.placeTerm = '';
                         }
+                    };
+
+                    $scope.removePlace = function(item) {
+                        $scope.search.places = _.without($scope.search.places,item);
                     };
 
                 }
             };
         }])
-		.directive('sdWorkflow', ['superdesk', 'workqueue', function(superdesk, queue) {
+		.directive('sdFilterTypeahead', function() {
+            return {
+                scope: {
+                    items : '=',
+                    additem : '&'
+                },
+                templateUrl: 'scripts/superdesk-items/views/filter-typeahead.html',
+                controller: ['$scope', function($scope) {
+
+                    $scope.filtered = [];
+                    $scope.searchterm = '';
+
+                    $scope.searchItem = function(term) {
+                        if (!term) {
+                            $scope.filtered = [];
+                        } else {
+                            if ($scope.items !== undefined) {
+                                $scope.filtered = $scope.items.filter(function(p) {
+                                    return p.term.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+                                });
+                            }
+                            else {
+                                $scope.filtered = [];
+                            }
+                        }
+                        return $scope.filtered;
+                    };
+
+                    $scope.selectItem = function(item) {
+                        if (item) {
+                            $scope.searchterm = '';
+                            $scope.additem({item:item});
+                        }
+                    };
+
+                }]
+            };
+        })
+        .directive('sdWorkflow', ['superdesk', 'workqueue', function(superdesk, queue) {
             return {
                 scope: true,
                 link: function(scope, elem, attrs) {
