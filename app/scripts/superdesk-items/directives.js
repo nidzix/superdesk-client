@@ -710,7 +710,6 @@ define([
                         handleUrgencyWrap(newVal);
                     });
 
-
                     $scope.$watchCollection('items', function() {
                         if ($scope.items._facets !== undefined) {
                             _.forEach($scope.items._facets.type.terms, function(type) {
@@ -726,7 +725,7 @@ define([
                     };
 
                     $scope.removeSubject = function(item) {
-                        $scope.search.subjects = _.without($scope.search.subjects,item);
+                        $scope.search.subjects = _.without($scope.search.subjects, item);
                     };
 
                     $scope.addPlace = function(item) {
@@ -736,7 +735,7 @@ define([
                     };
 
                     $scope.removePlace = function(item) {
-                        $scope.search.places = _.without($scope.search.places,item);
+                        $scope.search.places = _.without($scope.search.places, item);
                     };
 
                 }
@@ -745,8 +744,8 @@ define([
 		.directive('sdFilterTypeahead', function() {
             return {
                 scope: {
-                    items : '=',
-                    additem : '&'
+                    items: '=',
+                    additem: '&'
                 },
                 templateUrl: 'scripts/superdesk-items/views/filter-typeahead.html',
                 controller: ['$scope', function($scope) {
@@ -762,8 +761,7 @@ define([
                                 $scope.filtered = $scope.items.filter(function(p) {
                                     return p.term.toLowerCase().indexOf(term.toLowerCase()) !== -1;
                                 });
-                            }
-                            else {
+                            } else {
                                 $scope.filtered = [];
                             }
                         }
@@ -773,7 +771,7 @@ define([
                     $scope.selectItem = function(item) {
                         if (item) {
                             $scope.searchterm = '';
-                            $scope.additem({item:item});
+                            $scope.additem({item: item});
                         }
                     };
 

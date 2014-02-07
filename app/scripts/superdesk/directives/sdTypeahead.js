@@ -3,7 +3,7 @@ define(['angular', 'moment'], function(angular, moment) {
 
     angular.module('superdesk.directives').
         /**
-         * Typeahead direcitve 
+         * Typeahead direcitve
          *
          * Usage:
          *  <div sd-typeahead items="subjects" term="subjectTerm" search="searchSubjects(term)" select="selectSubject(item)">
@@ -18,7 +18,7 @@ define(['angular', 'moment'], function(angular, moment) {
          * @scope {Object} items - choice list
          * @scope {Object} term - search term
          * @scope {Function} search - callback for filtering choice action
-         * @scope {Function} select - callback for select item aciton 
+         * @scope {Function} select - callback for select item aciton
          *
          */
         directive('sdTypeahead', ['$timeout', function($timeout) {
