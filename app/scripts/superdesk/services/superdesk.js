@@ -60,6 +60,7 @@ define(['angular', 'lodash'], function(angular, _) {
                 when: id, // use id as default
                 href: id, // use id as default
                 filters: [],
+                beta: false,
                 reloadOnSearch: false
             }, data);
 
@@ -69,10 +70,6 @@ define(['angular', 'lodash'], function(angular, _) {
 
             if (actionless) {
                 console.error('Missing filters action for activity', activity);
-            }
-
-            if (activity.when[0] === '/' && (activity.template || activity.templateUrl)) {
-                $routeProvider.when(activity.when, activity);
             }
 
             activities[id] = activity;
@@ -91,8 +88,25 @@ define(['angular', 'lodash'], function(angular, _) {
             return this;
         };
 
-        this.$get = ['$q', 'activityService', 'activityChooser', 'DataAdapter',
-        function($q, activityService, activityChooser, DataAdapter) {
+        this.$get = ['$q', 'activityService', 'activityChooser', 'DataAdapter', 'storage', '$rootScope', '$window',
+        function($q, activityService, activityChooser, DataAdapter, storage, $rootScope, $window) {
+
+            $rootScope.beta = localStorage.getItem('beta') === 'true';
+
+            $rootScope.changeVersion = function() {
+                localStorage.setItem('beta', !$rootScope.beta);
+                $window.location.reload();
+            };
+
+            _.forEach(activities, function(activity, id) {
+                if (activity.when[0] === '/' && (activity.template || activity.templateUrl)) {
+                    $routeProvider.when(activity.when, activity);
+                }
+                if (activity.beta === true && $rootScope.beta === false) {
+                    $routeProvider.when(activity.when, {redirectTo: '/dashboard'});
+                    delete activities[id];
+                }
+            });
 
             /**
              * Find all available activities for given intent
@@ -215,6 +229,22 @@ define(['angular', 'lodash'], function(angular, _) {
 
         $rootScope.intent = function() {
             superdesk.intent.apply(superdesk, arguments);
+        };
+    }]);
+
+    /**
+     * Directive for displaying/hiding beta version elements
+     */
+    module.directive('sdBeta', [ '$rootScope', function($rootScope) {
+        return {
+            priority: 1000,
+            link: function(scope, elem, attrs) {
+                if (!$rootScope.beta) {
+                    elem.addClass('beta-hide');
+                } else {
+                    elem.removeClass('beta-hide');
+                }
+            }
         };
     }]);
 
