@@ -88,23 +88,19 @@ define(['angular', 'lodash'], function(angular, _) {
             return this;
         };
 
-        this.$get = ['$q', 'activityService', 'activityChooser', 'DataAdapter', 'storage', '$rootScope', '$window',
-        function($q, activityService, activityChooser, DataAdapter, storage, $rootScope, $window) {
+        this.$get = ['$q', 'activityService', 'activityChooser', 'DataAdapter', 'betaService',
+        function($q, activityService, activityChooser, DataAdapter, betaService) {
 
-            $rootScope.beta = localStorage.getItem('beta') === 'true';
-
-            $rootScope.changeVersion = function() {
-                localStorage.setItem('beta', !$rootScope.beta);
-                $window.location.reload();
-            };
-
+            /**
+             * Render main menu depending on registered acitivites
+             */
+            var beta = betaService.isBeta();
             _.forEach(activities, function(activity, id) {
-                if (activity.when[0] === '/' && (activity.template || activity.templateUrl)) {
-                    $routeProvider.when(activity.when, activity);
-                }
-                if (activity.beta === true && $rootScope.beta === false) {
+                if (activity.beta === true && beta === false) {
                     $routeProvider.when(activity.when, {redirectTo: '/dashboard'});
                     delete activities[id];
+                } else if (activity.when[0] === '/' && (activity.template || activity.templateUrl)) {
+                    $routeProvider.when(activity.when, activity);
                 }
             });
 
@@ -229,22 +225,6 @@ define(['angular', 'lodash'], function(angular, _) {
 
         $rootScope.intent = function() {
             superdesk.intent.apply(superdesk, arguments);
-        };
-    }]);
-
-    /**
-     * Directive for displaying/hiding beta version elements
-     */
-    module.directive('sdBeta', [ '$rootScope', function($rootScope) {
-        return {
-            priority: 1000,
-            link: function(scope, elem, attrs) {
-                if (!$rootScope.beta) {
-                    elem.addClass('beta-hide');
-                } else {
-                    elem.removeClass('beta-hide');
-                }
-            }
         };
     }]);
 
