@@ -11,7 +11,7 @@ define(['angular', 'lodash'], function(angular, _) {
 
         $rootScope.beta = localStorage.getItem('beta') === 'true';
 
-        this.changeVersion = function() {
+        this.toggleBeta = function() {
             localStorage.setItem('beta', !$rootScope.beta);
             $window.location.reload();
         };
@@ -26,13 +26,13 @@ define(['angular', 'lodash'], function(angular, _) {
 	* Directive for displaying/hiding beta version elements
 	*/
 	module.directive('sdBeta', [ 'betaService', function(betaService) {
-		return {
-			priority: 1000,
+		return !betaService.isBeta() ? {
+			priority: 10000,
 			link: function(scope, elem, attrs) {
 				if (!betaService.isBeta()) {
 					elem.html('').addClass('beta-hide');
 				}
 			}
-		};
+		} : {};
 	}]);
 });

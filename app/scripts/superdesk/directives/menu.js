@@ -27,8 +27,8 @@ define([
                         elem.find('.open').removeClass('open');
                     };
 
-                    scope.changeVersion = function() {
-                        betaService.changeVersion();
+                    scope.toggleBeta = function() {
+                        betaService.toggleBeta();
                     };
 
                     scope.$on('$routeChangeSuccess', function() {
