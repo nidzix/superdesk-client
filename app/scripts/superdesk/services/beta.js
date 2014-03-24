@@ -23,16 +23,49 @@ define(['angular', 'lodash'], function(angular, _) {
     }]);
 
 	/**
-	* Directive for displaying/hiding beta version elements
+	* Detect beta elements in phase of loading html templates and prevent rendering of those
 	*/
-	module.directive('sdBeta', [ 'betaService', function(betaService) {
-		return !betaService.isBeta() ? {
-			priority: 10000,
-			link: function(scope, elem, attrs) {
-				if (!betaService.isBeta()) {
-					elem.html('').addClass('beta-hide');
-				}
-			}
-		} : {};
-	}]);
+	module.config(['$httpProvider', function($httpProvider) {
+        $httpProvider.responseInterceptors.push([
+            '$q', '$templateCache', 'betaService',
+            function($q, $templateCache, betaService) {
+
+                var modifiedTemplates = {};
+
+                var HAS_FLAGS_EXP = /sd-beta/;
+
+                var IS_HTML_PAGE = /\.html$|\.html\?/i;
+
+                return function(promise) {
+                    return promise.then(function(response) {
+                        var url = response.config.url,
+                        responseData = response.data;
+
+                        if (!modifiedTemplates[url] && IS_HTML_PAGE.test(url) &&
+                        HAS_FLAGS_EXP.test(responseData)) {
+
+                            var template = $('<div>').append(responseData);
+
+                            if (!betaService.isBeta()) {
+                                template.find('[sd-beta]').each(function() {
+                                    $(this).remove();
+                                });
+                            }
+
+                            response.data = template.html();
+
+                            $templateCache.put(url, response.data);
+                            modifiedTemplates[url] = true;
+                        }
+
+                        return response;
+                    },
+
+                    function(response) {
+                        return $q.reject(response);
+                    });
+                };
+            }
+        ]);
+    }]);
 });
