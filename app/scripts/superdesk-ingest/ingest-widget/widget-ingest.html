@@ -6,10 +6,17 @@
 
         <div class="ingest-list"
             sd-list-view
-            data-items="items._items"
+            data-items="processedItems"
             data-select="view(item)"
             data-extras="widget">
             <div class="urgency-{{ item.urgency}}">
+                <!--
+                <span ng-show="item.pinnedInstance">this is pinned instance</span>
+                <span ng-show="!item.pinnedInstance && isPinned(item)">this is unpinned instance of pinned item</span>
+                <span ng-show="!isPinned(item)">this is unpinned item</span>
+                -->
+                <button class="btn" ng-show="!isPinned(item)" ng-click="pin(item);$event.stopPropagation()">Pin</button>
+                <button class="btn" ng-show="item.pinnedInstance && isPinned(item)" ng-click="unpin(item);$event.stopPropagation();">Unpin</button>
                 <ul class="top-line clearfix">
                     <li><span class="type-icon filetype-icon-{{item.type}}"></span><span class="urgency-label">{{ item.urgency }}</span></li>
                     <li>{{ item.versioncreated | reldate }}</li>
