@@ -66,7 +66,6 @@ define([
     AuthoringController.$inject = [
         '$scope',
         '$routeParams',
-        '$interval',
         '$timeout',
         'superdesk',
         'api',
@@ -77,10 +76,9 @@ define([
         'lock'
     ];
 
-    function AuthoringController($scope, $routeParams, $interval, $timeout, superdesk, api,
+    function AuthoringController($scope, $routeParams, $timeout, superdesk, api,
         workqueue, notify, gettext, ConfirmDirty, lock) {
         var _item,
-            _autosaveFlag,
             confirm = new ConfirmDirty($scope);
 
         $scope.item = null;
@@ -108,7 +106,7 @@ define([
                 return false;
             }
 
-            if (!angular.isDefined(item._latest_version)) {
+            if (!item._latest_version) {
                 return true;
             }
 
@@ -124,13 +122,6 @@ define([
             return dirty;
         }
 
-        function stopAutosaving() {
-            if (angular.isDefined(_autosaveFlag)) {
-                $interval.cancel(_autosaveFlag);
-                _autosaveFlag = undefined;
-            }
-        }
-
         $scope.$watchCollection('item', function(item) {
             if (!item) {
                 $scope.dirty = $scope.editable = false;
@@ -140,12 +131,8 @@ define([
             $scope.editable = isEditable(item);
             $scope.dirty = isDirty(item);
 
-            if ($scope.dirty) {
-                if ($scope.editable && !angular.isDefined(_autosaveFlag)) {
-                    _autosaveFlag = $interval($scope.update, 5000);
-                }
-            } else {
-                stopAutosaving();
+            if ($scope.dirty && $scope.editable) {
+                autosave();
             }
         });
 
@@ -155,20 +142,21 @@ define([
 
         $scope.articleSwitch = function() {
             $scope.update();
-            stopAutosaving();
         };
 
         $scope.update = function() {
+            console.log('update called');
             if ($scope.dirty && $scope.editable) {
                 workqueue.update($scope.item); //do local update
                 $scope.saving = true;
-                api('autosave', $scope.item).save({}, $scope.item).then(function() {
+                api('archive_autosave').save({}, $scope.item).then(function(i) {
                     $scope.saving = false;
                     $scope.saved = true;
                     $timeout(function() {
                         $scope.saved = false;
                     }, 2000);
                     console.log('success autosave');
+                    console.log(i);
                 }, function(response) {
                     console.log('error on autosave');
                     console.log(response);
@@ -176,17 +164,19 @@ define([
             }
         };
 
-    	$scope.save = function() {
+        var autosave = _.debounce($scope.update, 3000);
+
+        $scope.save = function() {
             delete $scope.item._version;
-    		return api.archive.save(_item, $scope.item).then(function(res) {
+            return api.archive.save(_item, $scope.item).then(function(res) {
                 workqueue.update(_item);
                 $scope.item = _.create(_item);
                 $scope.dirty = false;
                 notify.success(gettext('Item updated.'));
-    		}, function(response) {
-    			notify.error(gettext('Error. Item not updated.'));
-    		});
-    	};
+            }, function(response) {
+                notify.error(gettext('Error. Item not updated.'));
+            });
+        };
 
         $scope.close = function() {
             confirm.confirm().then(function() {
@@ -350,20 +340,20 @@ define([
         ])
 
         .service('lock', LockService)
-    	.service('workqueue', WorkqueueService)
+        .service('workqueue', WorkqueueService)
         .factory('ConfirmDirty', ConfirmDirtyFactory)
         .directive('sdWorkqueue', WorkqueueListDirective)
 
         .config(['superdeskProvider', function(superdesk) {
             superdesk
                 .activity('/authoring/:_id', {
-                	label: gettext('Authoring'),
-	                templateUrl: 'scripts/superdesk-authoring/views/main.html',
+                    label: gettext('Authoring'),
+                    templateUrl: 'scripts/superdesk-authoring/views/main.html',
                     topTemplateUrl: 'scripts/superdesk-dashboard/views/workspace-topnav.html',
-	                controller: AuthoringController,
-	                beta: true,
-	                filters: [{action: 'author', type: 'article'}]
-	            })
+                    controller: AuthoringController,
+                    beta: true,
+                    filters: [{action: 'author', type: 'article'}]
+                })
                 .activity('/authoring/', {
                     label: gettext('Authoring'),
                     templateUrl: 'scripts/superdesk-authoring/views/dashboard.html',
@@ -373,16 +363,16 @@ define([
                     category: superdesk.MENU_MAIN,
                     filters: [{action: 'author', type: 'dashboard'}]
                 })
-	            .activity('edit.text', {
-	            	label: gettext('Edit item'),
-	            	icon: 'pencil',
-	            	controller: ['data', '$location', 'workqueue', 'superdesk', function(data, $location, workqueue, superdesk) {
-	            		workqueue.add(data.item);
+                .activity('edit.text', {
+                    label: gettext('Edit item'),
+                    icon: 'pencil',
+                    controller: ['data', '$location', 'workqueue', 'superdesk', function(data, $location, workqueue, superdesk) {
+                        workqueue.add(data.item);
                         superdesk.intent('author', 'article', data.item);
-	                }],
-	            	filters: [
-	                    {action: superdesk.ACTION_EDIT, type: 'archive'}
-	                ]
-	            });
+                    }],
+                    filters: [
+                        {action: superdesk.ACTION_EDIT, type: 'archive'}
+                    ]
+                });
         }]);
 });
