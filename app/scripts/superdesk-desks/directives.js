@@ -6,7 +6,8 @@ define([
     'use strict';
 
     var app = angular.module('superdesk.desks.directives', []);
-    app.directive('sdUserDesks', ['$rootScope', 'desks', function($rootScope, desks) {
+    app
+    .directive('sdUserDesks', ['$rootScope', 'desks', function($rootScope, desks) {
         return {
             scope: {
                 selectedDesk: '=desk'
@@ -22,6 +23,17 @@ define([
                     scope.selectedDesk = desk;
                     desks.setCurrentDesk(desk);
                 };
+            }
+        };
+    }])
+    .directive('sdFocusInput', [ '$timeout', function($timeout) {
+        return {
+            link: function(scope, elem, attrs) {
+                elem.click(function() {
+                     $timeout(function() {
+                        elem.parent().find('input').focus();
+                    });
+                });
             }
         };
     }]);

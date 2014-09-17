@@ -14,7 +14,10 @@ define(['angular', 'lodash'], function(angular, _) {
             $scope.membersToSelect = [];
             $scope.desk = null;
             $scope.memberScreen2 = false;
-
+            $scope.stages = {
+                show: false,
+                model: null
+            };
             desks.initialize()
             .then(function() {
                 $scope.desks = desks.desks;
@@ -77,6 +80,21 @@ define(['angular', 'lodash'], function(angular, _) {
 
             $scope.removeMember = function(member) {
                 _.remove($scope.selectedMembers, member);
+            };
+
+            $scope.saveOnEnter = function($event) {
+                if ($event.keyCode === 13) {
+                    if (!$scope.editDesk.stages) {
+                        $scope.editDesk.stages = [];
+                    }
+                    $scope.editDesk.stages.push({
+                        _id: $scope.editDesk.stages.length,
+                        title: $scope.stages.model
+                    });
+                    $scope.stages.model = null;
+                    $scope.stages.show = false;
+                    return false;
+                }
             };
 
             $scope.saveMembers = function() {
