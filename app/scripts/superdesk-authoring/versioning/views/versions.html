@@ -1,5 +1,17 @@
 <div class="article-versions" ng-controller="VersioningWidgetCtrl">
     <ul class="versions-list card-list">
+        <li class="item draft" ng-if="draft" ng-class="{selected: draftselected.flag}" ng-click="openDraft()">
+            <div class="header">
+                <time title="{{draft._updated|date:'medium'}}" datetime="{{draft._updated}}">{{draft._updated|reldate}}</time>
+                <span class="close"><i class="icon-close-small"></i></span>
+                <span class="user">{{ 'by system' | translate }}</span>
+            </div>
+            <h6 ng-show="draft.headline">{{draft.headline}}</h6>
+            <h6 class="no-title" ng-show="!draft.headline">{{ 'No title provided' | translate}}</h6>
+            <div class="footer">
+                <em>{{ 'autosaved draft' | translate}}</em>
+            </div>
+        </li>
         <li class="item" ng-class="{selected: version === selected}" ng-repeat="version in versions._items|orderBy:'_version':true" ng-click="openVersion(version)">
             <div class="header">
                 <time title="{{version.versioncreated|date:'medium'}}" datetime="{{version.versioncreated}}">{{version.versioncreated|reldate}}</time>

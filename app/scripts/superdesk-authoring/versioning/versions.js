@@ -30,15 +30,28 @@
                     }
                 });
                 $scope.versions = result;
-                $scope.selected = _.find($scope.versions._items, {_version: $scope.item._latest_version});
+                if (!$scope.draftselected.flag) {
+                    $scope.selected = _.find($scope.versions._items, {_version: $scope.item._version});
+                }
             });
         };
 
+        var filldata = function(data) {
+            $scope.item._version = data._version;
+            $scope.item.headline = data.headline;
+            $scope.item.body_html = data.body_html;
+        };
+
         $scope.openVersion = function(version) {
+            $scope.draftselected.flag = false;
             $scope.selected = version;
-            $scope.item._version = version._version;
-            $scope.item.headline = version.headline;
-            $scope.item.body_html = version.body_html;
+            filldata(version);
+        };
+
+        $scope.openDraft = function() {
+            $scope.draftselected.flag = true;
+            $scope.selected = null;
+            filldata($scope.draft);
         };
 
         $scope.revert = function() {

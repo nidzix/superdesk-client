@@ -1,6 +1,7 @@
 define([
-    'angular'
-], function(angular) {
+    'angular',
+    'moment'
+], function(angular, moment) {
     'use strict';
 
     LockService.$inject = ['$q', 'api', 'session'];
@@ -86,17 +87,32 @@ define([
         $scope.workqueue = workqueue.all();
         $scope.editable = false;
         $scope.currentVersion = null;
+        $scope.draft = null;
+        $scope.draftselected = {flag: false};
         setupNewItem();
         $scope.saving = false;
         $scope.saved = false;
 
+        function initialize() {
+            lock.lock(_item)['finally'](function() {
+                $scope.item = _.create(_item);
+                $scope.editable = !lock.isLocked(_item);
+                workqueue.setActive(_item);
+            });
+        }
+
         function setupNewItem() {
             if ($routeParams._id) {
-                _item = workqueue.find({_id: $routeParams._id}) || workqueue.active;
-                lock.lock(_item)['finally'](function() {
-                    $scope.item = _.create(_item);
-                    $scope.editable = !lock.isLocked(_item);
-                    workqueue.setActive(_item);
+                _item = workqueue.findItem($routeParams._id) || workqueue.active;
+                api.archive_autosave.getByUrl(_item._links.self.href)
+                .then(function(draft) {
+                    console.log(draft);
+                    $scope.draft = draft;
+                    $scope.draftselected.flag = true;
+                    _item = workqueue.consistence(_item, draft);
+                    initialize();
+                }, function() {
+                    initialize();
                 });
             }
         }
@@ -109,7 +125,9 @@ define([
             if (!item._latest_version) {
                 return true;
             }
-
+            console.log('Version checking');
+            console.log(item._version);
+            console.log(item._latest_version);
             return item._latest_version === item._version;
         }
 
@@ -131,7 +149,7 @@ define([
             $scope.editable = isEditable(item);
             $scope.dirty = isDirty(item);
 
-            if ($scope.dirty && $scope.editable) {
+            if ($scope.dirty && $scope.editable && (!$scope.draft || ($scope.draft && $scope.draftselected.flag))) {
                 autosave();
             }
         });
@@ -145,21 +163,21 @@ define([
         };
 
         $scope.update = function() {
-            console.log('update called');
             if ($scope.dirty && $scope.editable) {
-                workqueue.update($scope.item); //do local update
+                workqueue.update($scope.item, true); //do local update with dirty flag
                 $scope.saving = true;
-                api('archive_autosave').save({}, $scope.item).then(function(i) {
+                //prepare item for saving
+                var item = _.pick($scope.item, '_id', 'guid', '_links', 'headline', 'body_html', 'slugline');
+                api('archive_autosave', $scope.item).save(item).then(function(draft) {
+                    $scope.draft = draft;
+                    workqueue.update(draft, false); //validate dirty flag
                     $scope.saving = false;
                     $scope.saved = true;
                     $timeout(function() {
                         $scope.saved = false;
                     }, 2000);
-                    console.log('success autosave');
-                    console.log(i);
                 }, function(response) {
-                    console.log('error on autosave');
-                    console.log(response);
+                    $scope.saving = false;
                 });
             }
         };
@@ -169,7 +187,9 @@ define([
         $scope.save = function() {
             delete $scope.item._version;
             return api.archive.save(_item, $scope.item).then(function(res) {
-                workqueue.update(_item);
+                //remove draft
+                //set latest version as selected
+                workqueue.update(_item, false);
                 $scope.item = _.create(_item);
                 $scope.dirty = false;
                 notify.success(gettext('Item updated.'));
@@ -210,8 +230,16 @@ define([
          * @param {Object} item
          */
         this.add = function(item) {
-            _.remove(queue, {_id: item._id});
-            queue.unshift(item);
+            var current = this.find(item._id);
+
+            if (current) {
+                this.consistence(current.item, item);
+            } else {
+                queue.unshift({
+                    item: item,
+                    dirty: false
+                });
+            }
             this.length = queue.length;
             this.active = item;
             this.save();
@@ -219,13 +247,26 @@ define([
         };
 
         /**
-         * Update item in a queue
+         * Update item in a queue, provide item, and cache flag
          */
-        this.update = function(item) {
+        this.update = function(item, dirty) {
             if (item) {
-                var base = this.find({_id: item._id});
-                queue[_.indexOf(queue, base)] = _.extend(base, item);
+                var base = this.find(item._id);
+                var index = _.indexOf(queue, base);
+                queue[index] = _.extend(base, {item: item, dirty: dirty});
                 this.save();
+                return queue[index];
+            }
+        };
+
+        /**
+         * If 'item' is newer than current one, override it
+         */
+        this.consistence = function(current, item) {
+            if (moment(item._updated).isAfter(current._updated)) {
+                return this.update(item, false);
+            } else {
+                return current;
             }
         };
 
@@ -240,7 +281,7 @@ define([
          * Get all items from queue
          */
         this.all = function() {
-            return queue;
+            return _.map(queue, 'item');
         };
 
         /**
@@ -253,8 +294,15 @@ define([
         /**
          * Find item by given criteria
          */
-        this.find = function(criteria) {
-            return _.find(queue, criteria);
+        this.find = function(_id) {
+            return _.find(queue, function(item) {
+                return item.item._id === _id;
+            });
+        };
+
+        this.findItem = function(_id) {
+            var t = this.find(_id);
+            return t.item;
         };
 
         /**
@@ -264,26 +312,19 @@ define([
             if (!item) {
                 this.active = null;
             } else {
-                this.active = this.find({_id: item._id});
+                this.active = this.find(item._id);
             }
-        };
-
-        /**
-         * Get '_id' of active item or null if it's not defined
-         */
-        this.getActive = function() {
-            return this.active ? this.active._id : null;
         };
 
         /**
          * Remove given item from queue
          */
         this.remove = function(item) {
-            _.remove(queue, {_id: item._id});
+            _.remove(queue, this.find(item._id));
             this.length = queue.length;
             this.save();
 
-            if (this.active._id === item._id && this.length > 0) {
+            if (this.active.item._id === item._id && this.length > 0) {
                 this.setActive(_.first(queue));
             } else {
                 this.active = null;
@@ -374,5 +415,11 @@ define([
                         {action: superdesk.ACTION_EDIT, type: 'archive'}
                     ]
                 });
+        }])
+        .config(['apiProvider', function(apiProvider) {
+            apiProvider.api('archive_autosave', {
+                type: 'http',
+                backend: {rel: 'archive_autosave'}
+            });
         }]);
 });

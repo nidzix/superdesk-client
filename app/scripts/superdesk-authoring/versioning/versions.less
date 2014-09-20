@@ -62,6 +62,16 @@
 					cursor: pointer;
 				}
 				
+				&.draft {
+					background: none;
+					border-color: #dfdfdf;
+					&.selected {
+						background: @sd-hover;
+					}
+					.close {
+						margin-left: 5px;
+					}
+				}
 			}
 		}
 
