@@ -6,11 +6,9 @@ module.exports = function(grunt) {
 
         var server = grunt.option('server') || process.env.SUPERDESK_URL || url;
         var ws = grunt.option('ws') || process.env.SUPERDESK_WS_URL || 'ws://localhost:5100';
-
         if (forceUrl) {
             server = url;
         }
-
         var config = {
             raven: {dsn: process.env.SUPERDESK_RAVEN_DSN || ''},
             server: {url: server, ws: ws},
@@ -28,7 +26,10 @@ module.exports = function(grunt) {
         return {data: {config: config}};
     }
 
-    var files = {'<%= distDir %>/index.html': '<%= appDir %>/index.html'};
+    var files = {
+        '<%= distDir %>/index.html': '<%= appDir %>/index.html',
+        '<%= distDir %>/liveblog.html': '<%= appDir %>/liveblog.html'
+    };
 
     return {
         mock: {
