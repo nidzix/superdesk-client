@@ -19,10 +19,6 @@
     <link rel="stylesheet" href="scripts/bower_components/jcrop/css/jquery.Jcrop.css">
     <!-- endbuild -->
 
-    <!-- build:css styles/css/medium-editor.css -->
-    <link rel="stylesheet" href="scripts/bower_components/medium-editor/dist/css/medium-editor.css">
-    <link rel="stylesheet" href="scripts/bower_components/medium-editor/dist/css/themes/flat.css">
-    <!-- endbuild -->
   </head>
   <body>
 
@@ -58,6 +54,7 @@
         var modules = [
             'superdesk.settings',
             'liveblog.dashboard',
+            'liveblog.bloglist',
             'superdesk.users',
             'superdesk.scratchpad'
         ];
@@ -66,6 +63,7 @@
             'main',
             'superdesk-settings/module',
             'liveblog-dashboard/module',
+            'liveblog-bloglist/module',
             'superdesk-users/module',
             'superdesk-scratchpad/module'
         ], function(bootstrap) {
