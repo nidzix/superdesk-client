@@ -7,7 +7,8 @@ module.exports = {
         files: [
             '<%= appDir %>/styles/{,*/}*.less',
             '<%= appDir %>/scripts/superdesk/**/*.less',
-            '<%= appDir %>/scripts/superdesk-*/**/*.less'
+            '<%= appDir %>/scripts/superdesk-*/**/*.less',
+            '<%= appDir %>/scripts/liveblog-*/**/*.less'
         ]
     },
     code: {
@@ -26,6 +27,6 @@ module.exports = {
     index: {
         options: {livereload: true},
         tasks: ['template'],
-        files: ['<%= appDir %>/index.html']
+        files: ['<%= appDir %>/index.html', '<%= appDir %>/liveblog.html']
     }
 };

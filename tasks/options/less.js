@@ -7,7 +7,7 @@ var files = [
         expand: true,
         dest: '<%= tmpDir %>/',
         cwd: '<%= appDir %>/scripts/',
-        src: ['superdesk/**/*.less', 'superdesk-*/**/*.less'],
+        src: ['superdesk/**/*.less', 'superdesk-*/**/*.less', 'liveblog-*/**/*.less'],
         ext: '.css'
     }
 ];
