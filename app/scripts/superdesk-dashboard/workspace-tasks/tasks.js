@@ -107,32 +107,51 @@ function TaskPreviewDirective(tasks, notify) {
         templateUrl: 'scripts/superdesk-dashboard/workspace-tasks/views/task-preview.html',
         scope: {
             item: '=',
-            users: '='
+            users: '=',
+            desks: '='
         },
         link: function(scope) {
-            var _orig;
+            var _orig, _form;
             scope.task = null;
+            scope.task_details = null;
 
-            scope.$watch('item._id', function() {
-                edit();
-            });
-
-            var edit = function() {
-                scope.task = _.create(scope.item);
-                _orig = scope.item;
+            scope.setForm = function(form) {
+                _form = form;
             };
 
+            scope.$watch('item', function(newVal, oldVal) {
+                if (newVal && ((oldVal && newVal._id !== oldVal._id) || !oldVal)) {
+                    scope.reset();
+                }
+            });
+
+            scope.$watch('task_details', function(newVal, oldVal) {
+                if (newVal && oldVal) {
+                    _form.taskForm.$setDirty();
+                }
+            }, true);
+
             scope.save = function(form) {
+                _.extend(scope.task.task, scope.task_details);
                 tasks.save(_orig, scope.task)
                 .then(function(result) {
                     notify.success(gettext('Item saved.'));
-                    form.$setPristine();
+                    _form.taskForm.$setPristine();
                 });
             };
 
-            scope.cancel = function(form) {
-                form.$setPristine();
-                edit();
+            scope.reset = function(form) {
+                scope.task = null;
+                scope.task_details = null;
+                //
+                //need scope.$apply() here
+                //
+                scope.task = _.create(scope.item);
+                scope.task_details = _.extend({}, scope.item.task);
+                _orig = scope.item;
+                if (_form) {
+                    _form.taskForm.$setPristine();
+                }
             };
         }
     };

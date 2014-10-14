@@ -77,7 +77,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="preview-pane" sd-task-preview data-item="selected.preview" data-users="userLookup"></div>
+		<div class="preview-pane" sd-task-preview data-item="selected.preview" data-users="userLookup" data-desks="deskLookup"></div>
 	</div>
 	<div sd-workqueue></div>
 </section>
@@ -102,7 +102,8 @@
 				<div class="assignee-name">
                     <span ng-show="newTask.task.desk">{{deskLookup[newTask.task.desk].name}} / </span>
                     <span ng-show="newTask.task.user">{{userLookup[newTask.task.user].display_name}}</span>
-                    <span ng-hide="newTask.task.user" translate>Unassigned</span></div>
+                    <span ng-hide="newTask.task.user" translate>Unassigned</span>
+                </div>
 			</section>
 			<header translate>Action</header>
 			<section>
