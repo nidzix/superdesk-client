@@ -111,47 +111,37 @@ function TaskPreviewDirective(tasks, notify) {
             desks: '='
         },
         link: function(scope) {
-            var _orig, _form;
+            var _orig;
             scope.task = null;
             scope.task_details = null;
+            scope.editmode = false;
 
-            scope.setForm = function(form) {
-                _form = form;
-            };
-
-            scope.$watch('item', function(newVal, oldVal) {
-                if (newVal && ((oldVal && newVal._id !== oldVal._id) || !oldVal)) {
+            scope.$watch('item._id', function(val) {
+                if (val) {
                     scope.reset();
                 }
             });
 
-            scope.$watch('task_details', function(newVal, oldVal) {
-                if (newVal && oldVal) {
-                    _form.taskForm.$setDirty();
-                }
-            }, true);
-
-            scope.save = function(form) {
-                _.extend(scope.task.task, scope.task_details);
+            scope.save = function() {
+                scope.task.task = _.extend(scope.task.task, scope.task_details);
                 tasks.save(_orig, scope.task)
                 .then(function(result) {
                     notify.success(gettext('Item saved.'));
-                    _form.taskForm.$setPristine();
+                    scope.editmode = false;
                 });
             };
 
-            scope.reset = function(form) {
-                scope.task = null;
-                scope.task_details = null;
-                //
-                //need scope.$apply() here
-                //
+            scope.edit = function() {
+                scope.editmode = true;
+            };
+
+            scope.reset = function() {
+                scope.editmode = false;
                 scope.task = _.create(scope.item);
                 scope.task_details = _.extend({}, scope.item.task);
+                scope.task_details.due_date = new Date(scope.item.task.due_date);
+                scope.task_details.due_time = new Date(scope.item.task.due_date);
                 _orig = scope.item;
-                if (_form) {
-                    _form.taskForm.$setPristine();
-                }
             };
         }
     };
