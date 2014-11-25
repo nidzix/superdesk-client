@@ -496,6 +496,7 @@
             'superdesk.authoring.comments',
             'superdesk.authoring.versions',
             'superdesk.authoring.workqueue',
+            'superdesk.authoring.packages',
             'superdesk.desks'
         ])
 
