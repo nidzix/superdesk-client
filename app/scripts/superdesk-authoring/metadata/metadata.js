@@ -19,7 +19,8 @@ angular.module('superdesk.authoring.metadata', ['superdesk.authoring.widgets'])
                 icon: 'info',
                 label: gettext('Info'),
                 template: 'scripts/superdesk-authoring/metadata/views/metadata-widget.html',
-                order: 1
+                order: 1,
+                side: 'right'
             });
     }])
 
