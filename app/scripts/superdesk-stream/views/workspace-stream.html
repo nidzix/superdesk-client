@@ -1,15 +1,7 @@
 <div class="subnav">
 
 	<div class="button-stack">
-    	
-    	<div class="navbtn dropdown" dropdown>
-    		<button class="dropdown-toggle" dropdown-toggle>{{ selectionName }}<b class="caret"></b></button>
-			<ul class="dropdown-menu">
-				<li ng-click="select(null)" ng-class="{selected: selectedDesk === null}"><a href="" translate>My Activity</a></li>
-				<li ng-repeat="desk in desks" ng-click="select(desk)" ng-class="{selected: desk === selectedDesk}"><a href="">{{ desk.name }}</a></li>
-			</ul>
-    	</div>
-    
+		<div class="navbtn dropdown" dropdown sd-user-desks data-desk="desk"></div>
     </div>
 
 </div>
@@ -17,8 +9,9 @@
 
 	<div class="activity-container">
 		<div class="activity-log">
-			<ul class="activity-list card-list" ng-controller="StreamController">
-				<li class="activity with-date" ng-repeat="activity in activities"><div class="date"><span>{{ activity._created | reldate}}</span></div>
+			<ul class="activity-list card-list">
+				<li class="activity with-date" ng-repeat="activity in activities._items">
+					<div class="date"><span>{{ activity._created | reldate}}</span></div>
 	                <div>
 	                    <figure class="avatar">
 	                        <img sd-user-avatar data-src="user.picture_url">
