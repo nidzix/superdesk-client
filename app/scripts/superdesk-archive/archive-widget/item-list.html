@@ -1,7 +1,9 @@
 <div class="main-list" ng-class="{wrap: selected}" >
     <div class="search-box">
-        <input type="text" placeholder="{{ 'Search'|translate }}" ng-model="query" class="searchbar" ng-keyup="searchOnEnter(query, $event)">
+        <input type="text" placeholder="{{ 'Search'|translate }}" ng-model="query" class="searchbar" ng-keyup="searchOnEnter(query, $event)" ng-show="!similar">
+        <button class="btn pull-right" ng-class="{'active': similar}" ng-click="toggleSimilar()" translate>Find similar</button>
     </div>
+    <div class="pagination-box" sd-pagination-alt data-page="page.current" data-max-page="page.max"></div>
 
     <div class="ingest-list-holder">
         <div sd-shadow>
@@ -10,6 +12,7 @@
                     <div class="dropdown more-actions" dropdown>
                         <button class="dropdown-toggle" dropdown-toggle><i class="icon-dots-vertical"></i></button>
                         <div class="dropdown-menu pull-right">
+                            <span class="pin-info" ng-show="item.pinnedInstance">{{'pinned from' | translate}} {{item._type}}</span>
                             <ul>
                                 <li><button ng-show="!isPinned(item)" ng-click="pin(item)">
                                     <i class="icon-pin"></i> {{ :: 'Pin' | translate }}</button>

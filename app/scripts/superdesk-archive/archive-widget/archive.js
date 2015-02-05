@@ -37,8 +37,11 @@ define([
         .controller('ArchiveController', ['$scope', 'api', 'BaseWidgetController',
         function ($scope, api, BaseWidgetController) {
             $scope.type = 'archiveWidget';
-            $scope.api = api.archive;
-
+            $scope.itemListOptions = {
+                endpoint: 'search',
+                repo: 'archive',
+                notStates: ['spiked']
+            };
             BaseWidgetController.call(this, $scope);
         }])
         .controller('ArchiveConfigController', ['$scope', 'api', 'BaseWidgetConfigController',

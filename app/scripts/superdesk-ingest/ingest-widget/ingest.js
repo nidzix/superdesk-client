@@ -37,8 +37,11 @@ define([
         .controller('IngestController', ['$scope', 'api', 'BaseWidgetController',
         function ($scope, api, BaseWidgetController) {
             $scope.type = 'ingestWidget';
-            $scope.api = api.ingest;
-
+            $scope.itemListOptions = {
+                endpoint: 'search',
+                repo: 'ingest',
+                notStates: ['spiked']
+            };
             BaseWidgetController.call(this, $scope);
         }])
         .controller('IngestConfigController', ['$scope', 'api', 'BaseWidgetConfigController',
