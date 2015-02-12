@@ -15,6 +15,15 @@
                 $scope.selected = null;
                 $scope.page = {current: 1, max: 1};
                 $scope.similar = false;
+                $scope.mode = 'basic';
+                $scope.itemTypeList = [
+                    'text',
+                    'picture',
+                    'audio',
+                    'video',
+                    'composite'
+                ];
+                $scope.itemTypes = _.clone($scope.itemTypeList);
 
                 var ENTER = 13;
                 var pinnedList = {};
@@ -48,6 +57,18 @@
 
                 $scope.toggleSimilar = function() {
                     $scope.similar = !$scope.similar;
+                };
+
+                $scope.toggleItemType = function(itemType) {
+                    if ($scope.itemTypes.indexOf(itemType) > -1) {
+                        $scope.itemTypes = _.without($scope.itemTypes, itemType);
+                    } else {
+                        $scope.itemTypes.push(itemType);
+                    }
+                };
+
+                $scope.isItemTypeToggled = function(itemType) {
+                    return $scope.itemTypes.indexOf(itemType) > -1;
                 };
 
                 $scope.view = function(item) {
@@ -106,13 +127,17 @@
                     'widget.configuration.maxItems',
                     'widget.configuration.search',
                     'query',
-                    'similar'
+                    'similar',
+                    'itemTypes'
                 ], function(vals) {
                     $scope.itemListOptions.provider = (!vals[0] || vals[0] !== 'all') ? vals[0] : undefined;
                     $scope.itemListOptions.pageSize = vals[1] ? vals[1] : 10;
                     $scope.itemListOptions.search = vals[3] || vals[2] || undefined;
                     if (vals[4]) {
                         $scope.itemListOptions.search = $scope.item.slugline;
+                    }
+                    if (vals[5]) {
+                        $scope.itemListOptions.types = $scope.itemTypes || $scope.itemTypeList;
                     }
                     if ($scope.page.current === 1) {
                         refresh();
