@@ -20,7 +20,8 @@
 			float: right;
 			position: relative;
 			z-index: 1;
-			padding: 10px 5px; 
+			margin-right: 40px;
+			padding: 6px 0;
 			.text {
 				text-transform: uppercase;
 				font-size: 11px;
@@ -110,7 +111,7 @@
 			position: absolute;
 			top: 2*(@nav-height - 10px);
 			left: 0; right: 0;
-			bottom: 60px;
+			bottom: 0;
 			&.mode-detailed {
 				top: 3*(@nav-height - 10px);
 			}
@@ -239,7 +240,7 @@
 		}
 		.main-list {
 			position: absolute;
-			left: 0; right: 0; bottom: 0; top: 44px;
+			left: 0; right: 0; bottom: 0; top: 33px;
 			width: 100%;
 			.transition(all ease 0.2s);
 			overflow: hidden;
@@ -327,6 +328,26 @@
 				color: #000;
 				font-size: 13px;
 				line-height: 20px;
+			}
+		}
+	}
+}
+
+.tabpane {
+	&.widget-ingest, &.widget-archive {
+		.sd-widget {
+
+			.widget-mode {
+				margin: 0;
+				padding: 10px 5px;
+			}
+
+			.main-list {
+				top: 44px
+			}
+
+			.ingest-list-holder {
+				bottom: 60px;
 			}
 		}
 	}
