@@ -1,42 +1,48 @@
-<div class="main-list" ng-class="{wrap: selected}" >
-    <div class="search-box">
-        <input type="text" placeholder="{{ 'Search'|translate }}" ng-model="query" class="searchbar" ng-keyup="searchOnEnter(query, $event)" ng-show="!similar">
-        <button class="btn pull-right" ng-class="{'active': similar}" ng-click="toggleSimilar()" translate>Find similar</button>
-    </div>
-    <span class="dropdown more-actions" dropdown>
-        <button class="dropdown-toggle" dropdown-toggle>
-            <span translate>Mode: </span>
-            <span translate ng-show="mode === 'basic'">Basic</span>
-            <span translate ng-show="mode === 'detailed'">Detailed</span>
-        </button>
-        <div class="dropdown-menu">
-            <ul>
-                <li>
-                    <button ng-click="mode = 'basic'" ng-show="mode !== 'basic'">
-                        {{ 'Basic' | translate }}
-                    </button>
-                    <span ng-show="mode === 'basic'"><i class="icon-check"></i>{{ 'Basic' | translate }}</span>
-                </li>
-                <li>
-                    <button ng-click="mode = 'detailed'" ng-show="mode !== 'detailed'">
-                        {{ 'Detailed' | translate }}
-                    </button>
-                    <span ng-show="mode === 'detailed'"><i class="icon-check"></i>{{ 'Basic' | translate }}</span>
-                </li>
-            </ul>
-        </div>
-    </span>
-    <span>
-        <span ng-repeat="itemType in itemTypeList">
-            <a ng-click="toggleItemType(itemType)">
-                <i class="filetype-icon-{{itemType}}"></i>
-                <i class="icon-check" ng-show="isItemTypeToggled(itemType)"></i>
-            </a>
-        </span>
-    </span>
-    <div class="pagination-box" sd-pagination-alt data-page="page.current" data-max-page="page.max"></div>
+<div class="widget-mode">
+    <span class="text" translate>Mode: </span>
+    <button class="btn btn-mini btn-light" ng-click="mode = 'detailed'" ng-show="mode === 'basic'" translate>Basic</button>
+    <button class="btn btn-mini btn-light" ng-click="mode = 'basic'" ng-show="mode === 'detailed'" translate>Detailed</button>
+</div>
 
-    <div class="ingest-list-holder">
+<div class="main-list" ng-class="{wrap: selected}" >
+
+    <div class="search-box" ng-class="{blank: similar}">
+        
+        <input type="text" placeholder="{{ 'Search'|translate }}" ng-model="query" ng-keyup="searchOnEnter(query, $event)" ng-show="!similar">
+        
+        <div ng-if="similar" class="text" translate>Displaying similar items</div>
+        
+        <div class="dropdown more-actions" dropdown>
+            <button class="dropdown-toggle" dropdown-toggle><i class="icon-dots-vertical"></i></button>
+            <div class="dropdown-menu pull-right">
+                <ul>
+                    <li>
+                        <button ng-click="toggleSimilar()">
+                            <i ng-if="similar" class="icon-ok"></i> {{'Display similar' | translate }}
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div> 
+
+    </div>
+
+    
+    <div class="filter-box" ng-show="mode === 'detailed'">
+        <span class="text" translate>View</span>
+        <button class="btn btn-light pull-left" 
+            ng-repeat="itemType in itemTypeList" 
+            ng-click="toggleItemType(itemType)"
+            ng-class="{active: isItemTypeToggled(itemType)}">
+                <i class="filetype-icon-{{itemType}}"></i>
+        </button>
+    </div>
+
+    <div class="pagination-box" ng-class="{'mode-detailed': mode === 'detailed'}">
+        <div class="pull-left" sd-pagination-alt data-page="page.current" data-max-page="page.max"></div>
+    </div>
+
+    <div class="ingest-list-holder" ng-class="{'mode-detailed': mode === 'detailed'}">
         <div sd-shadow>
             <ul class="ingest-list list-view">
                 <li ng-repeat="item in processedItems track by $index" class="list-item-view">
@@ -55,12 +61,11 @@
                             </ul>
                         </div>
                     </div>
-                    <div ng-if="mode === 'basic'" class="item-block urgency-{{ item.urgency }}" 
+                    <div ng-if="mode === 'basic'" class="basic item-block urgency-{{ item.urgency }}" 
                         ng-class="{pinned: isPinned(item), 'pinned-instance': item.pinnedInstance}"
                         ng-click="view(item)">
                         <div class="content">
-                            <i class="filetype-icon-{{item.type}}"></i>
-                            <p><span class="keyword" ng-if="pitem.slugline">{{ item.slugline }}</span>{{item.headline || item.type}}</p>
+                            <p><i class="filetype-icon-{{item.type}}"></i><span class="keyword" ng-if="pitem.slugline">{{ item.slugline }}</span>{{item.headline || item.type}}</p>
                         </div>
                     </div>
                     <div ng-if="mode === 'detailed'" class="item-block urgency-{{ item.urgency }}" 
